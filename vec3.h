@@ -73,13 +73,14 @@ public:
     //IO
     inline std::istream& operator >>(std::istream &is) { is >> e[0] >> e[1] >> e[2]; return is; };
     inline std::ostream& operator <<(std::ostream &os) { os << e[0] << " " << e[1] << " " << e[2]; return os; };
+    inline void to_string() { printf("vec3(%f,%f,%f)\n", e[0], e[1], e[2]); };
 };
 
 inline vec3 operator *(const int t, const vec3& v) { return vec3(t * v.e[0], t * v.e[1], t * v.e[2]); };
 inline vec3 operator *(const float t, const vec3& v) { return vec3(t * v.e[0], t * v.e[1], t * v.e[2]); };
 inline vec3 operator *(const double t, const vec3& v) { return vec3(t * v.e[0], t * v.e[1], t * v.e[2]); };
-inline vec3 operator /(const int t, const vec3& v) { return vec3(v.e[0] / t, v.e[1] / t, v.e[2] / t); };
-inline vec3 operator /(const float t, const vec3& v) { return vec3(v.e[0] / t, v.e[1] / t, v.e[2] / t); };
-inline vec3 operator /(const double t, const vec3& v) { return vec3(v.e[0] / t, v.e[1] / t, v.e[2] / t); };
+inline vec3 operator /(const int t, const vec3& v) { return vec3(t / v.e[0], t / v.e[1], t / v.e[2]); };
+inline vec3 operator /(const float t, const vec3& v) { return vec3(t / v.e[0], t / v.e[1], t / v.e[2]); };
+inline vec3 operator /(const double t, const vec3& v) { return vec3(t / v.e[0], t / v.e[1], t / v.e[2]); };
 
 #endif
