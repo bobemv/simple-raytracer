@@ -8,6 +8,9 @@
 #include "hitablelist.h"
 #include "float.h"
 #include "hitable.h"
+#include "camera.h"
+#include <cstdlib>
+#include <random>
 
 using namespace std;
 
@@ -78,6 +81,58 @@ vec3 color_gradient_with_sphere_shaded_2(const ray& r, hitable *world) {
     return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
 }
 
+// Chapter 6
+void create_gradient_with_sphere_shaded_antialiasing_rays_image(int width, int height)
+{
+    ofstream myfile;
+    time_t t = time(nullptr);
+    asctime(localtime(&t));
+    char filename[100] = "gradientRaysWithSphereShadedAntialiasing_";
+    char timestamp[30];
+    itoa(t, timestamp, 10);
+    strcat(filename, timestamp);
+    strcat(filename, ".ppm");
+    myfile.open(filename);
+
+
+    int nx = width;
+    int ny = height;
+    int ns = 200;
+    myfile << "P3\n" << nx << " " << ny << "\n255\n";
+    
+    hitable *list[2];
+    list[0] = new sphere(vec3(0, 0, -1), 0.5);
+    list[1] = new sphere(vec3(0, -100.5, -1), 100);
+    hitable *world = new hitable_list(list, 2);
+    camera cam;
+
+    for (int j = ny - 1; j >= 0; j--)
+    {
+        for (int i = 0; i < nx; i++)
+        {
+            vec3 col(0,0,0);
+            random_device rd;
+            mt19937 gen(rd());
+            uniform_real_distribution<float> generator(0, 1.0);
+            
+            for (int s = 0; s < ns; s++)
+            {
+                float u = float(i + generator(gen)) / float(nx);
+                float v = float(j + generator(gen)) / float(ny);
+                ray r = cam.get_ray(u, v);
+                //vec3 p = r.point_at_parameter(2.0);
+                col += color_gradient_with_sphere_shaded_2(r, world);
+            }
+
+            col /= float(ns);
+            int ir = int(255.99 * col[0]);
+            int ig = int(255.99 * col[1]);
+            int ib = int(255.99 * col[2]);
+            myfile << ir << " " << ig << " " << ib << "\n";
+        }
+    }
+    myfile.close();
+}
 // Chapter 5 - 2
 void create_gradient_with_sphere_shaded_2_rays_image(int width, int height)
 {
@@ -275,5 +330,5 @@ int main()
 {
     int nx = 200;
     int ny = 100;
-    create_gradient_with_sphere_shaded_2_rays_image(nx, ny);
+    create_gradient_with_sphere_shaded_antialiasing_rays_image(nx, ny);
 }
