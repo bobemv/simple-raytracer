@@ -14,11 +14,12 @@
 using namespace std;
 
 // Chpater 7
-vec3 random_in_unit_sphere(randomize& randomize) {
+vec3 random_in_unit_sphere() {
     vec3 p;
     vec3 p_randomized;
+    randomize* randomize_gen = &randomize::get_instance();
     do {
-        p_randomized = vec3(randomize.get_random_float(), randomize.get_random_float(), randomize.get_random_float());
+        p_randomized = vec3(randomize_gen->get_random_float(), randomize_gen->get_random_float(), randomize_gen->get_random_float());
         p = 2.0 * p_randomized - vec3(1,1,1);
     } while (p.squared_length() > 1.0);
     return p;
@@ -91,11 +92,12 @@ vec3 color_gradient_with_sphere_shaded_2(const ray& r, hitable *world) {
 }
 
 // Chapter 7
-vec3 color_gradient_with_sphere_shaded_diffused(const ray& r, hitable *world, randomize& randomize) {
+vec3 color_gradient_with_sphere_shaded_diffused(const ray& r, hitable *world) {
     hit_record rec;
+    randomize* randomize_gen = &randomize::get_instance();
     if (world->hit(r, 0.001, FLT_MAX, rec)) {
-        vec3 target = rec.p + rec.normal + random_in_unit_sphere(randomize);
-        return 0.5*color_gradient_with_sphere_shaded_diffused(ray(rec.p, target-rec.p), world, randomize);
+        vec3 target = rec.p + rec.normal + randomize_gen->random_in_unit_sphere();
+        return 0.5*color_gradient_with_sphere_shaded_diffused(ray(rec.p, target-rec.p), world);
     }
 
     vec3 unit_direction = r.direction().unit_vector();
@@ -127,7 +129,7 @@ void create_gradient_with_sphere_shaded_antialiasing_diffused_rays_image(int wid
     list[1] = new sphere(vec3(0, -100.5, -1), 100);
     hitable *world = new hitable_list(list, 2);
     camera cam;
-    randomize randomize;
+    randomize* randomize_gen = &randomize::get_instance();
     for (int j = ny - 1; j >= 0; j--)
     {
         for (int i = 0; i < nx; i++)
@@ -136,11 +138,11 @@ void create_gradient_with_sphere_shaded_antialiasing_diffused_rays_image(int wid
             
             for (int s = 0; s < ns; s++)
             {
-                float u = float(i + randomize.get_random_float()) / float(nx);
-                float v = float(j + randomize.get_random_float()) / float(ny);
+                float u = float(i + randomize_gen->get_random_float()) / float(nx);
+                float v = float(j + randomize_gen->get_random_float()) / float(ny);
                 ray r = cam.get_ray(u, v);
                 //vec3 p = r.point_at_parameter(2.0);
-                col += color_gradient_with_sphere_shaded_diffused(r, world, randomize);
+                col += color_gradient_with_sphere_shaded_diffused(r, world);
             }
 
             col /= float(ns);
@@ -178,7 +180,7 @@ void create_gradient_with_sphere_shaded_antialiasing_rays_image(int width, int h
     list[1] = new sphere(vec3(0, -100.5, -1), 100);
     hitable *world = new hitable_list(list, 2);
     camera cam;
-    randomize randomize;
+    randomize* randomize_gen = &randomize::get_instance();
     for (int j = ny - 1; j >= 0; j--)
     {
         for (int i = 0; i < nx; i++)
@@ -187,8 +189,8 @@ void create_gradient_with_sphere_shaded_antialiasing_rays_image(int width, int h
             
             for (int s = 0; s < ns; s++)
             {
-                float u = float(i + randomize.get_random_float()) / float(nx);
-                float v = float(j + randomize.get_random_float()) / float(ny);
+                float u = float(i + randomize_gen->get_random_float()) / float(nx);
+                float v = float(j + randomize_gen->get_random_float()) / float(ny);
                 ray r = cam.get_ray(u, v);
                 //vec3 p = r.point_at_parameter(2.0);
                 col += color_gradient_with_sphere_shaded_2(r, world);
