@@ -33,6 +33,15 @@ public:
         } while (p.squared_length() > 1.0);
         return p;
     };
+    static vec3 random_in_unit_disk() {
+        vec3 p;
+        vec3 p_randomized;
+        do {
+            p_randomized = vec3(get_random_float(), get_random_float(), 0);
+            p = 2.0 * p_randomized - vec3(1,1,0);
+        } while (p.dot(p) >= 1.0);
+        return p;
+    };
 };
 
 random_device randomize::rd;
