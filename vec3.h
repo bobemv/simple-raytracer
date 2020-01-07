@@ -68,7 +68,7 @@ public:
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
     }
     inline void make_unit_vector() { float k = 1.0 / sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]); e[0] *= k; e[1] *= k; e[2] *= k; };
-    inline vec3 unit_vector() { return *this / this->length(); };
+    inline vec3 unit_vector() const { return *this / this->length(); };
 
     //IO
     inline std::istream& operator >>(std::istream &is) { is >> e[0] >> e[1] >> e[2]; return is; };
