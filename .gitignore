@@ -3,3 +3,4 @@
 .vs
 .vscode
 *.ppm
+.DS_Store

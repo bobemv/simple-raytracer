@@ -25,6 +25,8 @@
 #include "zlib/zlib.h"
 #include <string.h>
 
+#include <iomanip>
+
 using namespace std;
 
 //Chapter 12
@@ -894,7 +896,7 @@ int read_mesh()
 
     fclose(dic);*/
 
-    ifstream input( "cube.fbx", std::ios::binary | std::ios::in |  std::ios::ate);
+    ifstream input( "Spaceship.fbx", std::ios::binary | std::ios::in |  std::ios::ate);
 
     if(input.is_open())
     {
@@ -944,39 +946,65 @@ int read_mesh()
             buffer_index_vertices = buffer_index + 1;
         }
     }
-    buffer_index_vertices += 1; //Skip array type
+
+    char * allbytes;
+    allbytes = new char[50];
+    input.seekg (buffer_index_vertices, ios::beg);
+    input.read(allbytes, 50);
+
+    for (int i = 0; i < 50; ++i)
+        cout << hex << (int) allbytes[i] << " ";
+    cout << endl;
+
+    dec;
+
+
+    buffer_index_vertices += 2; //Skip array type
+    
     char *int_in_chars;
     int_in_chars = new char[4];
 
-    int n_array_vertices_bytes = 0;
+    unsigned int n_array_vertices_bytes = 0;
     input.seekg (buffer_index_vertices, ios::beg);
     input.read(int_in_chars, 4);
     printf("Read: %s\n", int_in_chars);
+        for (int i = 0; i < 4; ++i)
+        cout << hex << (int) int_in_chars[i] << " ";
+    cout << endl;
+
+    dec;
     //sscanf(int_in_chars, "%d", &n_array_vertices_bytes);
-    n_array_vertices_bytes += (int)int_in_chars[4];
-    n_array_vertices_bytes = n_array_vertices_bytes << 4;
-    n_array_vertices_bytes += (int)int_in_chars[3];
-    n_array_vertices_bytes = n_array_vertices_bytes << 4;
-    n_array_vertices_bytes += (int)int_in_chars[2];
-    n_array_vertices_bytes = n_array_vertices_bytes << 4;
-    n_array_vertices_bytes += (int)int_in_chars[1];
+    /*n_array_vertices_bytes |= int_in_chars[3];
+    n_array_vertices_bytes = n_array_vertices_bytes << 8;
+    n_array_vertices_bytes |= int_in_chars[2];
+    n_array_vertices_bytes = n_array_vertices_bytes << 8;
+    n_array_vertices_bytes |= int_in_chars[1];
+    n_array_vertices_bytes = n_array_vertices_bytes << 8;
+    n_array_vertices_bytes |= int_in_chars[0];*/
+
+    n_array_vertices_bytes = (((unsigned int)int_in_chars[3] & 0x000000FF) << 24) | (((unsigned int)int_in_chars[2]  & 0x000000FF) << 16) | (((unsigned int)int_in_chars[1] & 0x000000FF) << 8) | ((unsigned int)int_in_chars[0] & 0x000000FF);
+
     buffer_index_vertices += 4; //Skip length vertices bytes
 
     buffer_index_vertices += 4; //Skip encoding
 
-    int n_array_compressed_vertices_bytes = 0;
+    unsigned int n_array_compressed_vertices_bytes = 0;
     input.seekg (buffer_index_vertices, ios::beg);
     input.read(int_in_chars, 4);
     printf("Read: %s\n", int_in_chars);
+        for (int i = 0; i < 4; ++i)
+        cout << hex << (int) int_in_chars[i] << " ";
+    cout << endl;
 
+    dec;
     //sscanf(int_in_chars, "%d", &n_array_compressed_vertices_bytes);
-    n_array_compressed_vertices_bytes += (int)int_in_chars[4];
-    n_array_compressed_vertices_bytes = n_array_compressed_vertices_bytes << 4;
     n_array_compressed_vertices_bytes += (int)int_in_chars[3];
-    n_array_compressed_vertices_bytes = n_array_compressed_vertices_bytes << 4;
+    n_array_compressed_vertices_bytes = n_array_compressed_vertices_bytes << 8;
     n_array_compressed_vertices_bytes += (int)int_in_chars[2];
-    n_array_compressed_vertices_bytes = n_array_compressed_vertices_bytes << 4;
+    n_array_compressed_vertices_bytes = n_array_compressed_vertices_bytes << 8;
     n_array_compressed_vertices_bytes += (int)int_in_chars[1];
+    n_array_compressed_vertices_bytes = n_array_compressed_vertices_bytes << 8;
+    n_array_compressed_vertices_bytes += (int)int_in_chars[0];
 
     buffer_index_vertices += 4; //Skip length vertices bytes compressed
     input.seekg (buffer_index_vertices, ios::beg);
@@ -1007,12 +1035,30 @@ int read_mesh()
     inflate(&infstream, Z_NO_FLUSH);
     inflateEnd(&infstream);
 
+        for (int i = 0; i < n_array_vertices_bytes; ++i)
+        cout << hex << (int) uncompressedArray[i] << " ";
+    cout << endl;
+
     for (int i = 0; i < (n_array_vertices_bytes / 8); i++)
     {
+        printf("Index: %d\n", i);
         char * char_ptr;
         char_ptr = new char[8];
         char_ptr = uncompressedArray + 8 * i;
-        double vertice = atof(char_ptr);
+
+        double vertice = 0;
+
+        memcpy(&vertice, char_ptr, 8);
+   
+
+        /*memcpy(&char_ptr_inverse[0], &char_ptr[7], 1);
+        memcpy(&char_ptr_inverse[1], &char_ptr[6], 1);
+        memcpy(&char_ptr_inverse[2], &char_ptr[5], 1);
+        memcpy(&char_ptr_inverse[3], &char_ptr[4], 1);
+        memcpy(&char_ptr_inverse[4], &char_ptr[3], 1);
+        memcpy(&char_ptr_inverse[5], &char_ptr[2], 1);
+        memcpy(&char_ptr_inverse[6], &char_ptr[1], 1);
+        memcpy(&char_ptr_inverse[7], &char_ptr[0], 1);*/
        
 
         printf("Double: %f\n", vertice);
