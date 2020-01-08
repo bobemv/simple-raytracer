@@ -5,18 +5,18 @@
 
 class vec3 {
 public:
-    float e[3];
+    double e[3];
 public:
     vec3() {}
-    vec3(float e0, float e1, float e2) { e[0] = e0; e[1] = e1; e[2] = e2; }
+    vec3(double e0, double e1, double e2) { e[0] = e0; e[1] = e1; e[2] = e2; }
 
-    inline float x() const { return e[0]; }
-    inline float y() const { return e[1]; }
-    inline float z() const { return e[2]; }
+    inline double x() const { return e[0]; }
+    inline double y() const { return e[1]; }
+    inline double z() const { return e[2]; }
 
-    inline float r() const { return e[0]; }
-    inline float g() const { return e[1]; }
-    inline float b() const { return e[2]; }
+    inline double r() const { return e[0]; }
+    inline double g() const { return e[1]; }
+    inline double b() const { return e[2]; }
 
     //Single operand
     inline const vec3& operator +() const { return *this; }
@@ -35,8 +35,8 @@ public:
     inline vec3 operator /(const double t) const { return vec3(e[0] / t, e[1] / t, e[2] / t); };
 
     //Accesing vec3 class as array
-    inline float operator [](int i) const { return e[i]; }
-    inline float& operator [](int i) { return e[i]; }
+    inline double operator [](int i) const { return e[i]; }
+    inline double& operator [](int i) { return e[i]; }
 
     //Both operands (composite)
     inline vec3& operator +=(const vec3 &v) { e[0] += v.e[0]; e[1] += v.e[1]; e[2] += v.e[2]; return *this; };
@@ -46,12 +46,12 @@ public:
     inline vec3& operator *=(const float t) { e[0] *= t; e[1] *= t; e[2] *= t; return *this; };
     inline vec3& operator *=(const double t) { e[0] *= t; e[1] *= t; e[2] *= t; return *this; };
     inline vec3& operator /=(const vec3 &v) { e[0] /= v.e[0]; e[1] /= v.e[1]; e[2] /= v.e[2]; return *this; };
-    inline vec3& operator /=(const int t) { float k = 1.0/t; e[0] *= k; e[1] *= k; e[2] *= k; return *this; };
-    inline vec3& operator /=(const float t) { float k = 1.0/t; e[0] *= k; e[1] *= k; e[2] *= k; return *this; };
-    inline vec3& operator /=(const double t) { float k = 1.0/t; e[0] *= k; e[1] *= k; e[2] *= k; return *this; };
+    inline vec3& operator /=(const int t) { double k = 1.0/t; e[0] *= k; e[1] *= k; e[2] *= k; return *this; };
+    inline vec3& operator /=(const float t) { double k = 1.0/t; e[0] *= k; e[1] *= k; e[2] *= k; return *this; };
+    inline vec3& operator /=(const double t) { double k = 1.0/t; e[0] *= k; e[1] *= k; e[2] *= k; return *this; };
 
     //Vector operations
-    inline float dot(const vec3 &v) const { return e[0] * v.e[0] + e[1] * v.e[1] + e[2] * v.e[2]; };
+    inline double dot(const vec3 &v) const { return e[0] * v.e[0] + e[1] * v.e[1] + e[2] * v.e[2]; };
     inline vec3 cross(const vec3 &v) const {
         return vec3 (
             e[1] * v.e[2] - e[2] * v.e[1],
@@ -61,10 +61,10 @@ public:
     };
 
     //Math utilities
-    inline float length() const {
+    inline double length() const {
         return sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]);
     }
-    inline float squared_length() const {
+    inline double squared_length() const {
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
     }
     inline void make_unit_vector() { float k = 1.0 / sqrt(e[0] * e[0] + e[1] * e[1] + e[2] * e[2]); e[0] *= k; e[1] *= k; e[2] *= k; };
