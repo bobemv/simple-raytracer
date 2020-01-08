@@ -461,6 +461,68 @@ void create_mesh_image(int width, int height)
     myfile.close();
 }
 
+void create_mesh_from_model_image(int width, int height, triangle** triangles, int n_triangles)
+{
+    ofstream myfile;
+    time_t t = time(nullptr);
+    asctime(localtime(&t));
+    char filename[100] = "meshModel_";
+    char timestamp[30];
+    sprintf(timestamp, "%ld", t);
+    strcat(filename, timestamp);
+    strcat(filename, ".ppm");
+    myfile.open(filename);
+
+
+    int nx = width;
+    int ny = height;
+    int ns = 30;
+    myfile << "P3\n" << nx << " " << ny << "\n255\n";
+    hitable *list[4];
+    list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
+    list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
+    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
+    //list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8), 1.0));
+    /*triangle* triangles[4];
+
+    triangles[0] = new triangle(vec3(-0.5, -0.5, 0.25), vec3(0.5, 0.5, 0.25), vec3(0.5, -0.5, 0.25));
+    triangles[1] = new triangle(vec3(-0.5, 0.5, 0.25), vec3(0.5, 0.5, 0.25), vec3(-0.5, -0.5, 0.25));
+
+    triangles[2] = new triangle(vec3(0.5, 10.5, 10.25), vec3(0.5, 10.5, -10.25), vec3(0.5, -0.5, 10.25));
+    triangles[3] = new triangle(vec3(0.5, -0.5, 10.25), vec3(0.5, 10.5, -10.25), vec3(0.5, -0.5, -10.25));*/
+    
+    list[3] = new mesh(vec3(-1, 0, -1), triangles, n_triangles, new lambertian(vec3(0.8, 0.3, 0.3)));
+    hitable *world = new hitable_list(list, 4);
+    
+    camera cam;
+    randomize* randomize_gen = &randomize::get_instance();
+    for (int j = ny - 1; j >= 0; j--)
+    {
+        for (int i = 0; i < nx; i++)
+        {
+            printf("nx: %d ny: %d\n", i, j);
+            vec3 col(0,0,0);
+            
+            for (int s = 0; s < ns; s++)
+            {
+                float u = float(i + randomize_gen->get_random_float()) / float(nx);
+                float v = float(j + randomize_gen->get_random_float()) / float(ny);
+                ray r = cam.get_ray(u, v);
+                //vec3 p = r.point_at_parameter(2.0);
+                col += color_gradient_with_sphere_shaded_materials(r, world, 0);
+            }
+
+            col /= float(ns);
+            col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
+            int ir = int(255.99 * col[0]);
+            int ig = int(255.99 * col[1]);
+            int ib = int(255.99 * col[2]);
+            myfile << ir << " " << ig << " " << ib << "\n";
+        }
+    }
+    myfile.close();
+}
+
 // Chapter 8
 void create_gradient_with_sphere_shaded_antialiasing_materials_rays_image(int width, int height)
 {
@@ -934,10 +996,10 @@ bool read_vertices_fbx(const char* fbx_filename, double*& vertices, int& n_verti
 
 
     n_array_vertices_bytes = (((unsigned int)int_in_chars[3] & 0x000000FF) << 24) |
-                             (((unsigned int)int_in_chars[2]  & 0x000000FF) << 16) |
+                             (((unsigned int)int_in_chars[2] & 0x000000FF) << 16) |
                              (((unsigned int)int_in_chars[1] & 0x000000FF) << 8) |
                              ((unsigned int)int_in_chars[0] & 0x000000FF);
-
+    n_array_vertices_bytes *= 10;
     buffer_index_vertices += 4; //Skip length vertices bytes
 
     buffer_index_vertices += 4; //Skip encoding
@@ -946,7 +1008,7 @@ bool read_vertices_fbx(const char* fbx_filename, double*& vertices, int& n_verti
     input.read(int_in_chars, 4);
 
     n_array_compressed_vertices_bytes = (((unsigned int)int_in_chars[3] & 0x000000FF) << 24) |
-                                        (((unsigned int)int_in_chars[2]  & 0x000000FF) << 16) |
+                                        (((unsigned int)int_in_chars[2] & 0x000000FF) << 16) |
                                         (((unsigned int)int_in_chars[1] & 0x000000FF) << 8) |
                                         ((unsigned int)int_in_chars[0] & 0x000000FF);
     buffer_index_vertices += 4; //Skip length vertices bytes compressed
@@ -960,7 +1022,7 @@ bool read_vertices_fbx(const char* fbx_filename, double*& vertices, int& n_verti
 
     char * compressedArray, *uncompressedArray;
     compressedArray = new char[n_array_compressed_vertices_bytes];
-    uncompressedArray = new char[n_array_vertices_bytes];
+    uncompressedArray =  (char*) calloc (n_array_vertices_bytes, sizeof(char));
 
     input.read(compressedArray, n_array_compressed_vertices_bytes);
 
@@ -988,7 +1050,10 @@ bool read_vertices_fbx(const char* fbx_filename, double*& vertices, int& n_verti
         memcpy(&vertice, char_ptr, 8);
         vertices[i] = vertice;
     }
-
+    //free(int_in_chars);
+    //free(compressedArray);
+    free(uncompressedArray);
+    //free(char_ptr);
     return true;
 }
 
@@ -1040,7 +1105,7 @@ bool read_indices_fbx(const char* fbx_filename, int*& indices, int& n_indices) {
     input.read(int_in_chars, 4);
 
     memcpy(&n_array_indices_bytes, int_in_chars, sizeof(unsigned int));
-
+    n_array_indices_bytes*= 10;
     buffer_index_indices += 4; //Skip length indices bytes
 
     buffer_index_indices += 4; //Skip encoding
@@ -1061,7 +1126,8 @@ bool read_indices_fbx(const char* fbx_filename, int*& indices, int& n_indices) {
 
     char * compressedArray, *uncompressedArray;
     compressedArray = new char[n_array_compressed_indices_bytes];
-    uncompressedArray = new char[n_array_indices_bytes];
+    //uncompressedArray = new char[n_array_indices_bytes];
+    uncompressedArray =  (char*) calloc (n_array_indices_bytes, sizeof(char));
 
     input.read(compressedArray, n_array_compressed_indices_bytes);
 
@@ -1090,7 +1156,10 @@ bool read_indices_fbx(const char* fbx_filename, int*& indices, int& n_indices) {
         //printf("Long int: %f\n", indice);
         indices[i] = indice;
     }
-
+    //free(int_in_chars);
+    //free(compressedArray);
+    free(uncompressedArray);
+    //free(char_ptr);
     return true;
 }
 
@@ -1114,7 +1183,11 @@ int main()
     print_data_lengths();
     read_vertices_fbx("Spaceship.fbx", vertices, n_vertices);
     read_indices_fbx("Spaceship.fbx", indices, n_indices);
+
     for (int vertice_index = 0; vertice_index < n_vertices; vertice_index++) {
+        if (vertices[vertice_index * 3] == 0 && vertices[vertice_index * 3 + 1] == 0 && vertices[vertice_index * 3 + 2] == 0) {
+            break;
+        }
         printf("%d - (x: %lf, y: %lf, z: %lf)\n", vertice_index,
                                                   vertices[vertice_index * 3],
                                                   vertices[vertice_index * 3 + 1],
@@ -1123,15 +1196,86 @@ int main()
 
     int indice_index = 0;
     int polygon_index = 0;
+    int* polygon = new int[50];
+    int polygon_indice_count = 0;
+    int triangles_count = 0;
+
+    triangle** triangles = (triangle**) malloc (n_indices * sizeof(triangle*));
+
     while (indice_index < n_indices) {
         printf("Polygon: %d, Indices: ", polygon_index);
+        int previous_indice = -1;
+        polygon_indice_count = 0;
+        bool is_end = false;
         while (indices[indice_index] >= 0) {
+            if (previous_indice == 0 && indices[indice_index] == 0) {
+                is_end = true;
+                break;
+            }
+            previous_indice = indices[indice_index];
+
+            polygon[polygon_indice_count] = indices[indice_index];
             printf("%d ", indices[indice_index]);
+
             indice_index++;
+            polygon_indice_count++;
         }
+        if (is_end) {
+            break;
+        }
+        polygon[polygon_indice_count] = -indices[indice_index]-1;
         printf("%d\n", -indices[indice_index]-1);
+        polygon_indice_count++;
         polygon_index++;
         indice_index++;
+        printf("Polygon: ");
+        for (int i = 0; i < polygon_indice_count; i++) {
+            printf("%d ", polygon[i]);
+        }
+        printf("\n");
+
+        //Make triangles
+        if (polygon_indice_count == 4) {
+            triangles[triangles_count] = new triangle(
+                vec3(vertices[polygon[2] * 3], vertices[polygon[2] * 3 + 1], vertices[polygon[2] * 3 + 2]),
+                vec3(vertices[polygon[1] * 3], vertices[polygon[1] * 3 + 1], vertices[polygon[1] * 3 + 2]),
+                vec3(vertices[polygon[0] * 3], vertices[polygon[0] * 3 + 1], vertices[polygon[0] * 3 + 2])
+            );
+            triangles[triangles_count]->to_string();
+            triangles_count++;
+            triangles[triangles_count] = new triangle(
+                vec3(vertices[polygon[3] * 3], vertices[polygon[3] * 3 + 1], vertices[polygon[3] * 3 + 2]),
+                vec3(vertices[polygon[2] * 3], vertices[polygon[2] * 3 + 1], vertices[polygon[2] * 3 + 2]),
+                vec3(vertices[polygon[0] * 3], vertices[polygon[0] * 3 + 1], vertices[polygon[0] * 3 + 2])
+            );
+            triangles[triangles_count]->to_string();
+
+            triangles_count++;
+            
+
+        }
+        else if (polygon_indice_count == 3) {
+            triangles[triangles_count] = new triangle(
+                vec3(vertices[polygon[2] * 3], vertices[polygon[2] * 3 + 1], vertices[polygon[2] * 3 + 2]),
+                vec3(vertices[polygon[1] * 3], vertices[polygon[1] * 3 + 1], vertices[polygon[1] * 3 + 2]),
+                vec3(vertices[polygon[0] * 3], vertices[polygon[0] * 3 + 1], vertices[polygon[0] * 3 + 2])
+            );
+            triangles[triangles_count]->to_string();
+
+            triangles_count++;
+        }
     }
+
+    triangle** triangles_reduced = (triangle**) malloc (triangles_count * sizeof(triangle*));
+    memcpy(triangles_reduced, triangles, triangles_count * sizeof(triangle*));
+
+    printf("n triangles: %d\n", triangles_count);
+    for (int triangle_index; triangle_index < triangles_count; triangle_index++) {
+        //printf("%d - ", triangle_index);
+        //triangles_reduced[triangle_index].to_string();
+    }
+
+    create_mesh_from_model_image(nx, ny, triangles, triangles_count);
+
 
 }

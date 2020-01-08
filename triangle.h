@@ -34,6 +34,13 @@ public:
     vec3 get_normal() {
         return normal;
     };
+    void to_string() {
+        printf("triangle\n");
+        p1.to_string();
+        p2.to_string();
+        p3.to_string();
+        printf("\n");
+    };
 private:
     bool is_intersection(const vec3& offset, const ray& r) {
         vec3 q1 = r.point_at_parameter(-1000);
