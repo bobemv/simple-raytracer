@@ -15,7 +15,7 @@ public:
         p1 = a;
         p2 = b;
         p3 = c;
-        normal = (p2 - p3).cross(p1 - p3);
+        normal = (p2 - p3).cross(p1 - p3).unit_vector();
     };
     triangle(vec3 a, vec3 b, vec3 c, vec3 n) {
         p1 = a;
@@ -31,7 +31,9 @@ public:
         }
         return false;
     };
-    vec3 get_normal() { return normal; };
+    vec3 get_normal() {
+        return normal;
+    };
 private:
     bool is_intersection(const vec3& offset, const ray& r) {
         vec3 q1 = r.point_at_parameter(-1000);

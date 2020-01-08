@@ -470,22 +470,22 @@ void create_mesh_image(int width, int height)
 
     int nx = width;
     int ny = height;
-    int ns = 200;
+    int ns = 40;
     myfile << "P3\n" << nx << " " << ny << "\n255\n";
     hitable *list[4];
     list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
     list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
-    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.3));
+    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
     //list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8), 1.0));
     triangle* triangles[4];
 
     triangles[0] = new triangle(vec3(-0.5, -0.5, 0.25), vec3(0.5, 0.5, 0.25), vec3(0.5, -0.5, 0.25));
     triangles[1] = new triangle(vec3(-0.5, 0.5, 0.25), vec3(0.5, 0.5, 0.25), vec3(-0.5, -0.5, 0.25));
 
-    triangles[2] = new triangle(vec3(0.5, 0.5, 0.25), vec3(0.5, 0.5, -0.25), vec3(0.5, -0.5, 0.25));
-    triangles[3] = new triangle(vec3(0.5, -0.5, 0.25), vec3(0.5, 0.5, -0.25), vec3(0.5, -0.5, -0.25));
+    triangles[2] = new triangle(vec3(0.5, 10.5, 10.25), vec3(0.5, 10.5, -10.25), vec3(0.5, -0.5, 10.25));
+    triangles[3] = new triangle(vec3(0.5, -0.5, 10.25), vec3(0.5, 10.5, -10.25), vec3(0.5, -0.5, -10.25));
     
-    list[3] = new mesh(vec3(-1, 0, -1), triangles, 4, new metal(vec3(0.8, 0.8, 0.8), 0.2));
+    list[3] = new mesh(vec3(-1, 0, -1), triangles, 4, new metal(vec3(0.8, 0.8, 0.8), 0.0));
     hitable *world = new hitable_list(list, 4);
     
     camera cam;
