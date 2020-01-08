@@ -924,8 +924,8 @@ int read_mesh()
     //cout.write(buffer.data(), buffer.size()); 
 
     //std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(input), {});
-    char vertices_name[9] = "Vertices";
-    int n_vertices_name = 8;
+    char string_search[9] = "Vertices";
+    int n_string_search = 8;
     
     
     int n_find = 0;
@@ -934,7 +934,7 @@ int read_mesh()
     //printf("Size: %d\n", size);
     for(long int buffer_index = 0; buffer_index < buffer.size(); buffer_index++) {
         //printf("%ld - %c\n", buffer_index, buffer.data()[buffer_index]);
-        if (buffer.data()[buffer_index] == vertices_name[n_find]) {
+        if (buffer.data()[buffer_index] == string_search[n_find]) {
             //printf("Found one! - i: %d - index: %ld\n", n_find, buffer_index);
             n_find++;
         }
@@ -1068,10 +1068,125 @@ int read_mesh()
     return 0;
 }
 
+bool read_vertices_fbx(const char* fbx_filename, double*& vertices, int& n_vertices) {
+
+    ifstream input(fbx_filename, std::ios::binary | std::ios::in |  std::ios::ate);
+
+    if(!input.is_open())
+    {
+        printf("Filename not valid!\n");
+        input.close();
+        return false;
+    }
+
+    int size_file = input.tellg();
+    input.seekg(0, ios::beg);
+    vector<char> buffer;
+    buffer.resize(size_file);
+    input.read(buffer.data(), size_file);
+
+    char string_search[9] = "Vertices";
+    int n_string_search = 8;
+    
+    
+    int n_find = 0;
+    long buffer_index_vertices = 0;
+
+    for(long int buffer_index = 0; buffer_index < buffer.size(); buffer_index++) {
+        if (buffer.data()[buffer_index] == string_search[n_find]) {
+            n_find++;
+        }
+        else {
+            n_find = 0;
+        }
+        if (n_find == 7) {
+            printf("Vertices found! At byte position: %ld\n", buffer_index);
+            buffer_index_vertices = buffer_index + 1;
+            break;
+        }
+    }
+    buffer_index_vertices += 2; //Skip array type + additional byte??
+    
+    char *int_in_chars;
+    int_in_chars = new char[4];
+
+    unsigned int n_array_vertices_bytes = 0, n_array_compressed_vertices_bytes = 0;
+    input.seekg (buffer_index_vertices, ios::beg);
+    input.read(int_in_chars, 4);
+
+
+    n_array_vertices_bytes = (((unsigned int)int_in_chars[3] & 0x000000FF) << 24) |
+                             (((unsigned int)int_in_chars[2]  & 0x000000FF) << 16) |
+                             (((unsigned int)int_in_chars[1] & 0x000000FF) << 8) |
+                             ((unsigned int)int_in_chars[0] & 0x000000FF);
+
+    buffer_index_vertices += 4; //Skip length vertices bytes
+
+    buffer_index_vertices += 4; //Skip encoding
+
+    input.seekg (buffer_index_vertices, ios::beg);
+    input.read(int_in_chars, 4);
+
+    n_array_compressed_vertices_bytes = (((unsigned int)int_in_chars[3] & 0x000000FF) << 24) |
+                                        (((unsigned int)int_in_chars[2]  & 0x000000FF) << 16) |
+                                        (((unsigned int)int_in_chars[1] & 0x000000FF) << 8) |
+                                        ((unsigned int)int_in_chars[0] & 0x000000FF);
+    buffer_index_vertices += 4; //Skip length vertices bytes compressed
+    input.seekg (buffer_index_vertices, ios::beg);
+
+    printf("Compressed length bytes: %d\n", n_array_compressed_vertices_bytes);
+    printf("Uncompressed length bytes: %d\n", n_array_vertices_bytes);
+
+    vertices = (double*) malloc ((n_array_vertices_bytes / 8) * sizeof(double));
+    n_vertices = (n_array_vertices_bytes / 8) / 3;
+
+    char * compressedArray, *uncompressedArray;
+    compressedArray = new char[n_array_compressed_vertices_bytes];
+    uncompressedArray = new char[n_array_vertices_bytes];
+
+    input.read(compressedArray, n_array_compressed_vertices_bytes);
+
+    z_stream infstream;
+    infstream.zalloc = Z_NULL;
+    infstream.zfree = Z_NULL;
+    infstream.opaque = Z_NULL;
+    // setup "b" as the input and "c" as the compressed output
+    infstream.avail_in = n_array_compressed_vertices_bytes; // size of input
+    infstream.next_in = (Bytef *)compressedArray; // input char array
+    infstream.avail_out = n_array_vertices_bytes; // size of output
+    infstream.next_out = (Bytef *)uncompressedArray; // output char array
+     
+    // the actual DE-compression work.
+    inflateInit(&infstream);
+    inflate(&infstream, Z_NO_FLUSH);
+    inflateEnd(&infstream);
+
+    char * char_ptr;
+    char_ptr = new char[8];
+    double vertice = 0;
+    for (int i = 0; i < (n_array_vertices_bytes / 8); i++)
+    {
+        char_ptr = uncompressedArray + 8 * i;
+        memcpy(&vertice, char_ptr, 8);
+        printf("Double: %f\n", vertice);
+        vertices[i] = vertice;
+    }
+
+    return true;
+}
+
+void print_char_array_as_hex(const char* array, int n) {
+    for (int i = 0; i < n; ++i)
+        cout << hex << (int) array[i] << " ";
+    cout << endl;
+}
+
 int main()
 {
     int nx = 200;
     int ny = 100;
     //create_mesh_image(nx, ny);
-    read_mesh();
+    double* vertices;
+    int n_vertices;
+    read_vertices_fbx("Spaceship.fbx", vertices, n_vertices);
 }
