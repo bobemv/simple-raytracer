@@ -476,12 +476,12 @@ void create_mesh_from_model_image(int width, int height, triangle** triangles, i
 
     int nx = width;
     int ny = height;
-    int ns = 30;
+    int ns = 200;
     myfile << "P3\n" << nx << " " << ny << "\n255\n";
-    hitable *list[4];
-    list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
-    list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
-    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
+    hitable *list[3];
+    //list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
+    list[0] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
+    list[1] = new sphere(vec3(1, 0, 0), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
     //list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8), 1.0));
     /*triangle* triangles[4];
 
@@ -491,10 +491,16 @@ void create_mesh_from_model_image(int width, int height, triangle** triangles, i
     triangles[2] = new triangle(vec3(0.5, 10.5, 10.25), vec3(0.5, 10.5, -10.25), vec3(0.5, -0.5, 10.25));
     triangles[3] = new triangle(vec3(0.5, -0.5, 10.25), vec3(0.5, 10.5, -10.25), vec3(0.5, -0.5, -10.25));*/
     
-    list[3] = new mesh(vec3(-1, 0, -1), triangles, n_triangles, new lambertian(vec3(0.8, 0.3, 0.3)));
-    hitable *world = new hitable_list(list, 4);
+    list[2] = new mesh(vec3(-1, 0, -1), triangles, n_triangles, new lambertian(vec3(0.8, 0.3, 0.3)));
+    hitable *world = new hitable_list(list, 3);
     
-    camera cam;
+    //camera cam;
+    vec3 lookfrom(12, 4, -2);
+    vec3 lookat(0,1,0);
+    float dist_to_focus = (lookfrom - lookat).length();
+    float aperture = 2;
+    camera cam(lookfrom, lookat, vec3(0,1,0), 20, float(nx) / float(ny), aperture, dist_to_focus);
+
     randomize* randomize_gen = &randomize::get_instance();
     for (int j = ny - 1; j >= 0; j--)
     {
@@ -1173,8 +1179,8 @@ void print_data_lengths() {
 
 int main()
 {
-    int nx = 200;
-    int ny = 100;
+    int nx = 800;
+    int ny = 400;
     //create_mesh_image(nx, ny);
     double* vertices;
     int n_vertices;
