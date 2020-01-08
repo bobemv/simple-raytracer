@@ -339,66 +339,6 @@ void create_gradient_with_sphere_shaded_antialiasing_materials_camera_rays_image
     myfile.close();
 }
 
-// Chapter 9
-void create_gradient_with_sphere_shaded_antialiasing_materials_2_rays_image(int width, int height)
-{
-    ofstream myfile;
-    time_t t = time(nullptr);
-    asctime(localtime(&t));
-    char filename[100] = "gradientRaysWithSphereShadedAntialiasingMaterials2_";
-    char timestamp[30];
-    sprintf(timestamp, "%ld", t);
-    strcat(filename, timestamp);
-    strcat(filename, ".ppm");
-    myfile.open(filename);
-
-
-    int nx = width;
-    int ny = height;
-    int ns = 200;
-    myfile << "P3\n" << nx << " " << ny << "\n255\n";
-    
-    hitable *list[5];
-    list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
-    list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
-    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2)));
-    list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.5));
-    list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5));
-    hitable *world = new hitable_list(list, 5);    float R = cos(M_PI/4);
-    hitable *list[5];
-    list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
-    list[1] = new sphere(vec3(0, -100.5, -1), 100, new lambertian(vec3(0.8, 0.8, 0.0)));
-    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2)));
-    list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.5));
-    list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5));
-    hitable *world = new hitable_list(list, 5);
-    camera cam(vec3(-2, 2, 1), vec3(0,0,-1), vec3(0,1,0), 90, float(nx) / float(ny));
-    randomize* randomize_gen = &randomize::get_instance();
-    for (int j = ny - 1; j >= 0; j--)
-    {
-        for (int i = 0; i < nx; i++)
-        {
-            vec3 col(0,0,0);
-            
-            for (int s = 0; s < ns; s++)
-            {
-                float u = float(i + randomize_gen->get_random_float()) / float(nx);
-                float v = float(j + randomize_gen->get_random_float()) / float(ny);
-                ray r = cam.get_ray(u, v);
-                //vec3 p = r.point_at_parameter(2.0);
-                col += color_gradient_with_sphere_shaded_materials(r, world, 0);
-            }
-
-            col /= float(ns);
-            col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
-            int ir = int(255.99 * col[0]);
-            int ig = int(255.99 * col[1]);
-            int ib = int(255.99 * col[2]);
-            myfile << ir << " " << ig << " " << ib << "\n";
-        }
-    }
-    myfile.close();
-}
 
 // Chapter 9
 void create_gradient_with_sphere_shaded_antialiasing_materials_2_rays_image(int width, int height)
@@ -864,13 +804,7 @@ void create_gradient_vectors_image(int width, int height)
 
 int main()
 {
-<<<<<<< HEAD
-    int nx = 1280;
-    int ny = 720;
-    create_random_scene(nx, ny);
-=======
     int nx = 200;
     int ny = 100;
     create_mesh_image(nx, ny);
->>>>>>> Added mesh and triangle classes.
 }
